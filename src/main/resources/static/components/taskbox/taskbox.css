@@ -1,1 +1,62 @@
 @charset "UTF-8";
+dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 30%;
+    background-color: rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+/* Selve modalboksen */
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    margin: 10% auto;
+    width: 300px;
+    border-radius: 5px;
+    position: relative;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+}
+
+/* Lukkeknappen */
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* Vis modal når aktivert */
+.modal-background.active {
+    display: block;
+}
+
+:host>dialog {
+    padding-top: 0px;
+}
+
+:host>dialog>span {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+:host>dialog>span:hover, :host>dialog>span:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+:host>dialog>div {
+    padding-top: 2em;
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    grid-gap: 10px;
+}

@@ -1,166 +1,189 @@
-/**
- * 
- */
+import '../tasklist/tasklist.js'
+import '../taskbox/taskbox.js'
+
 const template = document.createElement("template");
 template.innerHTML = `
-    <link rel="stylesheet" type="text/css"
-        href="${import.meta.url.match(/.*\//)[0]}/taskview.css"/>
-    <h1>Tasks</h1>
-    <div id="message"><p>Waiting for server data.</p></div>
-    <div id="newtask">
-        <button type="button" disabled>New task</button>
-    </div>
-    <!-- The task list -->
-    <task-list></task-list>
-    
-    <!-- The Modal -->
-    <task-box></task-box>
-`;
+ 
+    <div class="task-view">
+        <link rel="stylesheet" type="text/css"href="${import.meta.url.match(/.*\//)[0]}/taskview.css"/>
+
+        <h1>Tasks</h1>
+ 
+        <div id="message"> <p>Waiting for server data.</p> </div>
+ 
+        <div id="newtask"> <button type="button" disabled>New task</button> </div>
+ 
+        <!-- The task list -->
+        <task-list> </task-list>
+
+        <!-- The Modal -->
+        <task-box></task-box>
+     </div>
+ `;
 
 class TaskView extends HTMLElement {
-    #tasklist
-    #taskbox
-    #dataserviceurl
-    #statuseslist
-
     constructor() {
         super();
-        const content = template.content.cloneNode(true);
 
-        // save the tasklist and taskbox elements for easier access
-        this.#tasklist = content.querySelector("task-list");
-        this.#taskbox = content.querySelector("task-box");
+        this.shadow = this.attachShadow({mode: 'open'});
+        this.shadow.appendChild(template.content.cloneNode(true));
+        
+        this.taskList = this.shadow.querySelector('task-list');
+        this.taskBox = this.shadow.querySelector('task-box');
+        this.messageElement = this.shadow.querySelector('#message');
+        this.newTaskButton = this.shadow.querySelector('button');
+        
+        this.serviceUrl = this.getAttribute('data-serviceurl');
+        
+        this.initialize()
+        
+        }
 
-        console.log(`task-list: ${this.#tasklist} - task-box: ${this.#taskbox}`)
+        async initialize(){
+                this.messageElement.textContent = "Loading tasks...";
+                
+                const statuses = await this.fetchAllStatuses();
+                if(statuses === null){
+                    this.taskBox.setStatusesList(statuses);
+                    this.taskList.setStatuseslist(statuses);
+                    console.log("Fetched statuses:", statuses);
 
-        // save the url from the attribute
-        this.#dataserviceurl = this.getAttribute("data-serviceurl") || "./api";
+                    console.log(this.newTaskButton);
+                }
 
-        // add click handler to the new task button
-        const btn = content.querySelector("#newtask>button");
-        btn.addEventListener("click", () => {
-            this.#taskbox.show();
-        });
-        // enable button
-        content.querySelector("button").disabled = false;
+                const tasks = await this.fetchAllTasks();
+                if(tasks){
+                    tasks.forEach(task => this.taskList.showTask(task));
+                    this.messageElement.textContent = 'Found ${tasks.length} tasks';
+                    } else {
+                    this.messageElement.textContent = 'No tasks were found';      
+                 }
+                    this.newTaskButton.disabled = false; 
 
-        this.appendChild(content);
+                    
+                this.taskBox.newtaskCallback(async (newTask) => {
+                    const addedTask = await this.createTask(newTask.title, newTask.status);
+                    if(addedTask){
+                        this.taskList.showTask(addedTask);
+                        this.updateMessage();
+                    }
+                });
 
-        this.#updateStatusList();
+                this.taskList.changestatusCallback(async (id, newStatus) => {
+                    const updatedTask = await this.updateStatus(id, newStatus);
+                    if(updatedTask){
+                        this.taskList.updateTask(updatedTask);
+                    }
+                });
 
-        this.#tasklist.changestatusCallback(
-            (id, newStatus) => {
-                console.log(`id: ${id} - newStatus: ${newStatus}`);
-                fetch(`${this.#dataserviceurl}/task/${id}`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Charset": "utf-8"
-                    },
-                    body: JSON.stringify({ "status": newStatus })
-                }).then(
-                    response => {
-                        if (response.ok) {
-                            response.json().then(json => {
-                                if (json["responseStatus"] === true) {
-                                    this.#tasklist.updateTask({ "id": json.id, "status": json.status });
-                                }
-                            })
+                this.taskList.deletetaskCallback(async id => {
+            
+                    const deletedTask = await this.deleteTask(id);
+                     if(deletedTask){
+                            this.taskList.removeTask(id);
+                            console.log(`Oppgaven med ID ${id} ble slettet`);
+                            this.updateMessage(); 
                         } else {
-                            throw new Error("Som ting wong");
+                            console.error(`Oppgaven med ID ${id} ble ikke slettet fra serveren.`);
                         }
                     });
-            });
+                    
+            
+                this.newTaskButton.addEventListener('click', () => {
+                    console.log("New task button is clicked:");
+                    this.taskBox.show();
+                });
+                
+            }
 
-        this.#taskbox.newtaskCallback((title, status) => {
-            fetch(`${this.#dataserviceurl}/task`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Charset": "utf-8"
-                },
-                body: JSON.stringify({ "title": title, "status": status })
-            }).then(response => {
-                if (response.ok) {
-                    response.json().then(json => {
-                        if (json["responseStatus"] === true) {
-                            this.#tasklist.showTask(json["task"]);
-                        }
+            async fetchAllStatuses(){
+            
+                try{
+                    const response = await fetch(`${this.serviceUrl}/allstatuses`); 
+                    const data = await response.json();
+                    if(data.responseStatus){
+                        return data.allstatuses;
+                    }
+                    
+                    }catch(error){
+                        console.error("Feil ved henting av statuser", error);
+                    
+                }
+                    
+            }
+
+            async fetchAllTasks(){
+                
+                try{
+                    const response = await fetch(`${this.serviceUrl}/tasklist`);
+                    const data = await response.json(); 
+                    if(data.responseStatus){
+                        return data.tasks;
+                    }       
+                
+                }catch (error) {
+                    console.error('Error fetching tasks:', error);
+                }
+            
+            }
+ 
+            async createTask(title, status){
+                try{
+                    const response = await fetch(`${this.serviceUrl}/task`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({title, status})
                     });
-                } else {
-                    throw new Error("Som ting wong");
+                    
+                    const data = await response.json();
+                    if(data.responseStatus){
+                        return data.task;
+                    }
+                }catch(error){
+                    console.error('Feil ved oppretting av oppgave:', error);
                 }
-            })
-        });
-
-        this.#tasklist.deletetaskCallback((id) => {
-            fetch(`${this.#dataserviceurl}/task/${id}`, {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Charset": "utf-8"
-                }
-            }).then(response => {
-                if (response.ok) {
-                    response.json().then(json => {
-                        if (json["responseStatus"] === true) {
-                            this.#tasklist.removeTask(json["id"]);
-                        }
+            }
+            
+            async updateStatus(id, newStatus){
+                try{
+                    const response = await fetch(`${this.serviceUrl}/task/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
                     });
-                } else {
-                    throw new Error("Som ting wong");
+                    const data = await response.json(); 
+                    if(data.responseStatus){
+                        return data;
+                    }
+                }catch(error){
+                    console.error('Feil ved oppdatering av status', error);
                 }
-            })
-        });
-
-        this.#updateTaskList();
-
-    }
-
-    /**
-     * Updates the list of statuses used by the internal task-list and task-box elements
-     */
-    #updateStatusList() {
-        fetch(`${this.#dataserviceurl}/allstatuses`)
-            .then(response => {
-                if (response.ok) {
-                    response.json().then(json => {
-                        if (json.allstatuses) {
-                            this.#statuseslist = json.allstatuses;
-                            // console.log(this.#statuseslist);
-                            this.#tasklist.setStatuseslist(this.#statuseslist);
-                            this.#taskbox.setStatusesList(this.#statuseslist);
-                        }
-
+            }
+             
+            async deleteTask(id){
+                try{
+                    const response = await fetch(`${this.serviceUrl}/task/${id}`,{
+                        method: 'DELETE'
                     });
-                } else {
-                    throw new Error("Could not connect to server");
+                    
+                    const data = await response.json(); 
+                    if(data.responseStatus){
+                        
+                        return data; 
+                    }
+                    
+                }catch(error){
+                    console.error('Feil ved sletting av oppgave', error);
                 }
-            });
-    }
-
-    /**
-     * Fetches the list of tasks from the server
-     */
-    #updateTaskList() {
-        fetch(`${this.#dataserviceurl}/tasklist`)
-            .then(response => {
-                if (response.ok) {
-                    response.json().then(json => {
-                        if (json.tasks) {
-                            this.querySelector("#message>p").innerText = `Found ${json.tasks.length} tasks.`
-                            for (const task of json.tasks) {
-                                this.#tasklist.showTask(task);
-                            }
-                        }
-                    });
-                } else {
-                    throw new Error("Could not connect to server");
-                }
-            });
-
-    }
-
+            }
+            
+            updateMessage(){
+                const numTasks = this.taskList.getNumtasks();
+                if (numTasks === 0) {
+                       this.messageElement.textContent = "No tasks were found";
+                   } else {
+                       this.messageElement.textContent = `Found ${numTasks} tasks`;
+                   }
+            }   
 }
-
 customElements.define('task-view', TaskView);

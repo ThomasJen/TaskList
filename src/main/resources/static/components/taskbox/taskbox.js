@@ -1,85 +1,99 @@
-/**
- * 
- */
 const template = document.createElement("template");
 template.innerHTML = `
-    <link rel="stylesheet" type="text/css"
-        href="${import.meta.url.match(/.*\//)[0]}/taskbox.css"/>
-    <dialog>
-        <!-- Modal content -->
-        <span>&times;</span>
-        <div>
-            <div>Title:</div>
-            <div>
-                <input type="text" size="25" maxlength="80"
-                    placeholder="Task title" autofocus/>
-            </div>
-            <div>Status:</div><div><select></select></div>
-        </div>
-        <p><button type="submit">Add task</button></p>
-    </dialog>
-`;
-
-class TaskBox extends HTMLElement {
-    #dialog
-    #callbackForAddTask
+        <link rel="stylesheet" type="text/css" href="${import.meta.url.match(/.*\//)[0]}/taskbox.css"/>
+        
+        <dialog>
+              <!-- Modal content -->
+              <span class="close-btn">&times;</span>
+              <div>
+               <div> Title: </div>
+                <div>
+                <input type="text" size="25" maxlength="80" placeholder="Task-title" class="task-title" autofocus />
+                </div>
+              </div>
+             <div>
+              <div>Status:</div>
+                <div>
+                    <select class="task-status">
+                        <option value="WAITING">WAITING</option>
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="DONE">DONE</option>
+                    </select>
+                </div>
+             </div>
+               <p><button type="submit" class="add-task-btn">Add task</button></p>
+        </dialog>
+        `;
+class Taskbox extends HTMLElement {
 
     constructor() {
         super();
 
-        const content = template.content.cloneNode(true);
-        this.#dialog = content.querySelector("dialog");
+        this.shadow = this.attachShadow({ mode: 'open' });
+       
+        
+        this.shadow.appendChild(template.content.cloneNode(true));
+        console.log(this.shadow.innerHTML);
 
-        // make sure the "x" in the dialog modal closes it (like ESC key would)
-        content.querySelector("span").addEventListener("click", () => {
-            this.#dialog.close();
-        })
-        this.appendChild(content);
+        this.dialog = this.shadow.querySelector('dialog');
+        this.closeModalBtn = this.shadow.querySelector('.close-btn');
+        this.addTaskBtn = this.shadow.querySelector('.add-task-btn');
+        this.taskTitleInput = this.shadow.querySelector('.task-title');
+        this.taskStatusSelect = this.shadow.querySelector('.task-status');
+        this.statusesList = ["WAITING", "ACTIVE", "DONE"];
+
+        this.closeModalBtn.addEventListener('click', () => this.close());
+        
+        this.taskCallback = null;
+    }
+
+
+    show() {
+
+        this.dialog.showModal();
+
+    }
+
+    setStatusesList(statuslist) {
+
+        this.taskStatusSelect.innerHTML= '';
+        
+        
+        for (const status of statuslist) {
+
+            const option = document.createElement('option');
+            option.value = status;
+            option.textContent = status;
+            this.taskStatusSelect.appendChild(option);
+
+        }
+
+
     }
 
     newtaskCallback(callback) {
-        this.#callbackForAddTask = callback;
-        const btn = this.querySelector("button");
-        const input = this.querySelector("input");
-        const select = this.querySelector("select");
-        btn.addEventListener("click", () => {
-            const title = input.value;
-            const status = select.value;
+        
+        this.taskCallback = callback;
 
-            console.log(`title: ${title} - status: ${status}`);
-            this.#callbackForAddTask(title, status);
-            this.close();
+        this.addTaskBtn.addEventListener('click', () => {
+     
+            const tasktitle = this.taskTitleInput.value;
+            const taskstatus = this.taskStatusSelect.value;
 
-        })
-    }
-
-    setStatusesList(list) {
-        if (!Array.isArray(list)) {
-            console.error(`${list} is not a valid array`);
-            return;
-        }
-        if (list.length < 1) {
-            console.error("The status array must contain atleast one status");
-            return;
-        }
-        const select = this.querySelector("select");
-        for (let status of list) {
-            const elm = document.createElement("option");
-            elm.value = status;
-            elm.innerText = status;
-            select.appendChild(elm);
-        }
-    }
-
-    show() {
-        this.#dialog.showModal();
+            const newTask = { title:tasktitle, status: taskstatus };
+            
+            if (this.taskCallback) {
+                            this.taskCallback(newTask);
+            }
+            this.close();;
+        });
     }
 
     close() {
-        this.#dialog.close();
-        this.querySelector("input").value = "";
-        this.querySelector("select").value = "";
+
+        this.dialog.close();
+
     }
 }
 
-customElements.define('task-box', TaskBox);
+customElements.define('task-box', Taskbox);

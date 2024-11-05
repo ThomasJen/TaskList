@@ -22,7 +22,7 @@ taskrow.innerHTML = `
             </select>
         </td>
         <td><button type="button">Remove</button></td>
-    </tr>`;
+   </tr>`;
 
 /**
   * TaskList
@@ -30,16 +30,46 @@ taskrow.innerHTML = `
   */
 class TaskList extends HTMLElement {
 
-    #statuslist = null;
-    #callbackChangeStatus = null;
-    #callbackRemove = null;
-
     constructor() {
         super();
+        
+        this.shadow = this.attachShadow({mode: 'closed'});
+        this.shadow.appendChild(template.content.cloneNode(true));
+        
+        this.taskListElement = this.shadow.querySelector('#tasklist');
+        this.taskListElement.appendChild(tasktable.content.cloneNode(true));
+        
+        this.tasks = [];
+        this.statuses = [];
+        this.changeCallback = null;
+        this.deleteCallback = null;
 
-        const content = template.content.cloneNode(true);
-        this.appendChild(content);
+        
+        this.shadow.addEventListener('change', (event) => {
+                          if (event.target.tagName === 'SELECT') {
+                              const selectElement = event.target;
+                              const row = selectElement.closest('tr');
+                              const taskId = row.getAttribute('data-id');  // Anta ID-en er i første kolonne
+                              const newStatus = selectElement.value;
 
+                              const confirmation = window.confirm(`Set '${taskId}' to ${newStatus}?`);
+                              if (confirmation && this.changeCallback) {
+                                  this.changeCallback(taskId, newStatus);
+                              }
+                          }
+                      });
+
+                             this.shadow.addEventListener('click', (event) => {
+                                 if (event.target.tagName === 'BUTTON' && event.target.textContent === 'Remove') {
+                                     const row = event.target.closest('tr');
+                                     const taskId = row.getAttribute('data-id');  // Anta ID-en er i første kolonne
+
+                                     const confirmation = window.confirm(`Are you sure you want to delete task ${taskId}?`);
+                                     if (confirmation && this.deleteCallback) {
+                                         this.deleteCallback(taskId);
+                                     }
+                                 }
+                             });
     }
 
     /**
@@ -48,15 +78,7 @@ class TaskList extends HTMLElement {
      */
     setStatuseslist(allstatuses) {
 
-        if (!Array.isArray(allstatuses)) {
-            console.error(`${allstatuses} is not a valid array`);
-            return;
-        }
-        if (allstatuses.length < 1) {
-            console.error("The status array must contain atleast one status");
-            return;
-        }
-        this.#statuslist = Array.from(allstatuses);
+        this.statuses = allstatuses;
     }
 
     /**
@@ -65,29 +87,8 @@ class TaskList extends HTMLElement {
      * @param {function} callback
      */
     changestatusCallback(callback) {
-        this.#callbackChangeStatus = callback;
-        const rows = this.querySelectorAll("tbody>tr");
-        rows.forEach((row) => {
-            this.#setStatusChangeCallback(row);
-        });
-    }
 
-
-    /**
-        * Sets the statusChange callback for the given task row
-        * @param row {HTMLTableRowElement} The task row element
-        */
-    #setStatusChangeCallback(row) {
-        const id = row.id.slice(4);
-        const selectElm = row.querySelector("select");
-        selectElm.addEventListener("input", () => {
-            const newStatus = selectElm.value;
-            //console.log(`Change - id: ${id}  -  newStatus: ${newStatus}`);
-            const confirmed = window.confirm(`Set '${row.querySelector("td").innerText}' to ${newStatus}?`);
-            if (confirmed) {
-                this.#callbackChangeStatus(id, newStatus);
-            }
-        })
+      this.changeCallback = callback;
     }
 
     /**
@@ -97,28 +98,7 @@ class TaskList extends HTMLElement {
      */
     deletetaskCallback(callback) {
 
-        this.#callbackRemove = callback;
-        // also update any rows which were previously added
-        const rows = this.querySelectorAll("tbody>tr");
-        rows.forEach((row) => {
-            this.#setRemoveCallback(row);
-        });
-    }
-
-    /**
-        * Sets the remove callback for the given task row
-        * @param row {HTMLTableRowElement} The task row element
-        */
-    #setRemoveCallback(row) {
-        const id = row.id.slice(4);
-        const removeBtn = row.querySelector("button");
-        removeBtn.addEventListener("click", () => {
-            //console.log(`Delete - id: ${id}`);
-            const confirmed = window.confirm(`Delete task '${row.querySelector("td").innerText}'?`);
-            if (confirmed) {
-                this.#callbackRemove(id);
-            }
-        })
+        this.deleteCallback = callback;
     }
 
     /**
@@ -128,117 +108,72 @@ class TaskList extends HTMLElement {
      */
     showTask(task) {
 
-        if (this.#statuslist === null) {
-            console.error("You must first provide a list of valid statuses");
-            return;
-        }
-        let tableElm = this.querySelector("table");
-        if (tableElm === null) {
-            const containerDiv = this.querySelector("div#tasklist");
-            if (containerDiv === null) {
-                console.error(`Tasklist container div is missing, this component ${this} is broken`);
+            if (!this.taskListElement) {
+                console.error("Table body (tbody) not found in task list element");
                 return;
             }
-            // legg til en kopi av tasktable noden
-            containerDiv.appendChild(tasktable.content.cloneNode(true));
+
+            const clone = taskrow.content.cloneNode(true);
+            let tr = clone.querySelector("tr");
+            tr.setAttribute("data-id", task.id);
+
+            let td = clone.querySelectorAll("td");
+
+            td[0].textContent = task.title;
+            td[1].textContent = task.status;
+
+            let select = clone.querySelector("select");
+
+            // Add status options to the select element
+            for (let status of this.statuses) {
+                let option = document.createElement("option");
+                option.textContent = status;
+                option.value = status;
+                if (status === task.status) option.selected = true;
+                select.appendChild(option);
+            }
+
+            // Prepend to add the new task at the top
+            this.taskListElement.insertBefore(clone, this.taskListElement.firstChild);
+    }
+
+    /**
+     * Update the status of a task in the view
+     * @param {Object} task - Object with attributes {'id':taskId,'status':newStatus}
+     */
+    updateTask(task) {
+
+        let tr = this.shadow.getElementById(task.id);
+              let td = tr ? tr.cells[1] : null;
+              
+              if (td) {
+                  td.textContent = task.status;
+            }  
+    }
+
+    /**
+     * Remove a task from the view
+     * @param {Integer} task - ID of task to remove
+     */
+    removeTask(id) {
+
+        let tr = this.shadow.querySelector("data-id", id );
+        if (tr && confirm("Do you want to remove task?")) {
+                    tr.remove();
         }
-        if (!this.#validateTask(task)) {
-            return;
-        }
-        let tableBody = this.querySelector("tbody");
-        if (tableBody === null) {
-            console.error(`Tasklist table does not have a table body, it will be recreated`);
-            tableBody = tableElm.createTBody();
-        }
-        const newRow = taskrow.content.cloneNode(true);
-        const row = newRow.querySelector("tr");
-        row.id = `task${task.id}`;
-        const tds = newRow.querySelectorAll(`td`);
-        tds[0].innerText = task.title;
-        tds[1].innerText = task.status;
-        const statusSelect = newRow.querySelector("select");
-        this.#statuslist.forEach((status) => {
-            const newStatus = document.createElement("option");
-            newStatus.value = status;
-            newStatus.innerText = status;
-            statusSelect.appendChild(newStatus);
-        });
-        if (typeof this.#callbackChangeStatus === "function") {
-            this.#setStatusChangeCallback(row)
-        }
-        if (typeof this.#callbackRemove === "function") {
-            this.#setRemoveCallback(row)
-        }
-        tableBody.appendChild(newRow);
-}
-
-
-/**
- * Update the status of a task in the view
- * @param {Object} task - Object with attributes {'id':taskId,'status':newStatus}
- */
-updateTask(task) {
-
-    const { id = null, status = null } = task;
-    if (id === null || !Number.isInteger(id) || id < 0) {
-        console.error(`id ${id} is not a valid id`);
-        return;
     }
-    if (status === null || typeof status !== "string" || status.length < 1) {
-        console.error(`status ${status} is not a valid status`);
-        return;
+
+    /**
+     * @public
+     * @return {Number} - Number of tasks on display in view
+     */
+    getNumtasks() {
+     
+        return this.taskListElement.tBodies[0].rows.length;
+        
     }
-    const taskElm = this.querySelector(`#task${id}`); // tr
-    // 0 == task text, 1 == task status, 2 == modify status list, 3 == remove btn
-    taskElm.children[1].innerText = status;
+
+
+
 }
-
-
-/**
- * Remove a task from the view
- * @param {Integer} task - ID of task to remove
- */
-removeTask(id) {
-
-    if (!Number.isInteger(id)) {
-        console.error(`id ${id} is not an integer`);
-        return;
-    }
-    const taskElement = this.querySelector(`#task${id}`);
-    taskElement.remove();
-}
-
-/**
- * @public
- * @return {Number} - Number of tasks on display in view
- */
-getNumtasks() {
-    const tRows = this.querySelectorAll("tbody>tr");
-    return tRows.length;
-}
-
-/**
-* Checks if given task is valid
-* @param task the task to check
-* @returns {boolean} true if valid
-*/
-#validateTask(task) {
-    const { id = null, title = null, status = null } = task;
-    let valid = true;
-    if (id === null || !Number.isInteger(id) || id < 0) {
-        console.error(`id ${id} from new task ${task} is not valid`);
-        valid = false;
-    }
-    if (title === null || typeof title !== "string" || title.length < 1) {
-        console.error(`title ${title} from new task ${task} is not valid`)
-        valid = false;
-    }
-    if (status === null || typeof status !== "string" || status.length < 1) {
-        console.error(`status ${status} from new task ${task} is not valid`)
-        valid = false;
-    }
-    return valid;
-}
-}
-
 customElements.define('task-list', TaskList);
