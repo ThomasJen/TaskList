@@ -39,10 +39,15 @@ class TaskList extends HTMLElement {
         this.taskListElement = this.shadow.querySelector('#tasklist');
         this.taskListElement.appendChild(tasktable.content.cloneNode(true));
         
+        this.tbody = this.shadow.querySelector('tbody');
+        this.tbody.appendChild(taskrow);
+        
         this.tasks = [];
         this.statuses = [];
         this.changeCallback = null;
         this.deleteCallback = null;
+        
+       
 
         
         this.shadow.addEventListener('change', (event) => {
@@ -63,6 +68,7 @@ class TaskList extends HTMLElement {
                                  if (event.target.tagName === 'BUTTON' && event.target.textContent === 'Remove') {
                                      const row = event.target.closest('tr');
                                      const taskId = row.getAttribute('data-id');  // Anta ID-en er i første kolonne
+                                   
 
                                      const confirmation = window.confirm(`Are you sure you want to delete task ${taskId}?`);
                                      if (confirmation && this.deleteCallback) {
@@ -108,20 +114,27 @@ class TaskList extends HTMLElement {
      */
     showTask(task) {
 
-            if (!this.taskListElement) {
+            if (!taskrow || !taskrow.content) {
                 console.error("Table body (tbody) not found in task list element");
                 return;
             }
 
             const clone = taskrow.content.cloneNode(true);
-            let tr = clone.querySelector("tr");
-            tr.setAttribute("data-id", task.id);
+            const tr = clone.querySelector("tr");
+         
+            tr.querySelectorAll('td')[0].textContent = task.title;
+            tr.querySelectorAll('td')[1].textContent = task.status;
 
-            let td = clone.querySelectorAll("td");
-
-            td[0].textContent = task.title;
-            td[1].textContent = task.status;
-
+           if(this.tbody) {
+            this.tbody.appendChild(tr);
+           } else {
+            console.error("tbody element is not defined");
+           }
+            
+             const removeButton = tr.querySelector('button');
+            removeButton.addEventListener('click', () => {
+               this.removeTask(task.id);
+            });
             let select = clone.querySelector("select");
 
             // Add status options to the select element
@@ -142,8 +155,8 @@ class TaskList extends HTMLElement {
      * @param {Object} task - Object with attributes {'id':taskId,'status':newStatus}
      */
     updateTask(task) {
-
-        let tr = this.shadow.getElementById(task.id);
+        
+       let tr = this.shadow.getElementById(task.id);
               let td = tr ? tr.cells[1] : null;
               
               if (td) {
@@ -156,10 +169,10 @@ class TaskList extends HTMLElement {
      * @param {Integer} task - ID of task to remove
      */
     removeTask(id) {
-
-        let tr = this.shadow.querySelector("data-id", id );
+        
+        let tr = this.shadow.querySelector(`[data-id="${id}"]`);
         if (tr && confirm("Do you want to remove task?")) {
-                    tr.remove();
+                   tr.remove();
         }
     }
 
@@ -169,11 +182,10 @@ class TaskList extends HTMLElement {
      */
     getNumtasks() {
      
-        return this.taskListElement.tBodies[0].rows.length;
+        const numTasks = this.tbody && this.tbody.rows ? this.tbody.rows.length : 0;
+        return numTasks;
         
     }
-
-
 
 }
 customElements.define('task-list', TaskList);

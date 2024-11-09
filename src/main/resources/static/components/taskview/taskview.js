@@ -1,5 +1,5 @@
-import '../tasklist/tasklist.js'
-import '../taskbox/taskbox.js'
+import '../tasklist/tasklist.js';
+import '../taskbox/taskbox.js';
 
 const template = document.createElement("template");
 template.innerHTML = `
@@ -13,6 +13,7 @@ template.innerHTML = `
  
         <div id="newtask"> <button type="button" disabled>New task</button> </div>
  
+        
         <!-- The task list -->
         <task-list> </task-list>
 
@@ -25,7 +26,7 @@ class TaskView extends HTMLElement {
     constructor() {
         super();
 
-        this.shadow = this.attachShadow({mode: 'open'});
+        this.shadow = this.attachShadow({mode: 'closed'});
         this.shadow.appendChild(template.content.cloneNode(true));
         
         this.taskList = this.shadow.querySelector('task-list');
@@ -42,7 +43,7 @@ class TaskView extends HTMLElement {
         async initialize(){
                 this.messageElement.textContent = "Loading tasks...";
                 
-                const statuses = await this.fetchAllStatuses();
+                const statuses = await this.#fetchAllStatuses();
                 if(statuses === null){
                     this.taskBox.setStatusesList(statuses);
                     this.taskList.setStatuseslist(statuses);
@@ -51,26 +52,26 @@ class TaskView extends HTMLElement {
                     console.log(this.newTaskButton);
                 }
 
-                const tasks = await this.fetchAllTasks();
+                const tasks = await this.#fetchAllTasks();
                 if(tasks){
                     tasks.forEach(task => this.taskList.showTask(task));
-                    this.messageElement.textContent = 'Found ${tasks.length} tasks';
+                    this.messageElement.textContent = `Found ${tasks.length} tasks`;
                     } else {
-                    this.messageElement.textContent = 'No tasks were found';      
+                    this.messageElement.textContent = `No tasks were found`;      
                  }
                     this.newTaskButton.disabled = false; 
 
                     
                 this.taskBox.newtaskCallback(async (newTask) => {
-                    const addedTask = await this.createTask(newTask.title, newTask.status);
+                    const addedTask = await this.#createTask(newTask.title, newTask.status);
                     if(addedTask){
                         this.taskList.showTask(addedTask);
-                        this.updateMessage();
+                        this.#updateMessage();
                     }
                 });
 
                 this.taskList.changestatusCallback(async (id, newStatus) => {
-                    const updatedTask = await this.updateStatus(id, newStatus);
+                    const updatedTask = await this.#updateStatus(id, newStatus);
                     if(updatedTask){
                         this.taskList.updateTask(updatedTask);
                     }
@@ -78,11 +79,11 @@ class TaskView extends HTMLElement {
 
                 this.taskList.deletetaskCallback(async id => {
             
-                    const deletedTask = await this.deleteTask(id);
+                    const deletedTask = await this.#deleteTask(id);
                      if(deletedTask){
                             this.taskList.removeTask(id);
                             console.log(`Oppgaven med ID ${id} ble slettet`);
-                            this.updateMessage(); 
+                            this.#updateMessage(); 
                         } else {
                             console.error(`Oppgaven med ID ${id} ble ikke slettet fra serveren.`);
                         }
@@ -96,23 +97,23 @@ class TaskView extends HTMLElement {
                 
             }
 
-            async fetchAllStatuses(){
+            async #fetchAllStatuses(){
             
                 try{
                     const response = await fetch(`${this.serviceUrl}/allstatuses`); 
                     const data = await response.json();
+                    
                     if(data.responseStatus){
                         return data.allstatuses;
-                    }
-                    
-                    }catch(error){
+                  }
+                  } catch(error){
                         console.error("Feil ved henting av statuser", error);
-                    
+                        return [];
                 }
                     
             }
 
-            async fetchAllTasks(){
+            async #fetchAllTasks(){
                 
                 try{
                     const response = await fetch(`${this.serviceUrl}/tasklist`);
@@ -127,7 +128,7 @@ class TaskView extends HTMLElement {
             
             }
  
-            async createTask(title, status){
+            async #createTask(title, status){
                 try{
                     const response = await fetch(`${this.serviceUrl}/task`, {
                         method: 'POST',
@@ -144,7 +145,7 @@ class TaskView extends HTMLElement {
                 }
             }
             
-            async updateStatus(id, newStatus){
+            async #updateStatus(id, newStatus){
                 try{
                     const response = await fetch(`${this.serviceUrl}/task/${id}`, {
                         method: 'PUT',
@@ -160,15 +161,16 @@ class TaskView extends HTMLElement {
                 }
             }
              
-            async deleteTask(id){
+            async #deleteTask(id){
+                
                 try{
                     const response = await fetch(`${this.serviceUrl}/task/${id}`,{
                         method: 'DELETE'
                     });
                     
-                    const data = await response.json(); 
-                    if(data.responseStatus){
+                    const data = await response.json();
                         
+                    if(data.responseStatus){  
                         return data; 
                     }
                     
@@ -177,7 +179,7 @@ class TaskView extends HTMLElement {
                 }
             }
             
-            updateMessage(){
+            #updateMessage(){
                 const numTasks = this.taskList.getNumtasks();
                 if (numTasks === 0) {
                        this.messageElement.textContent = "No tasks were found";

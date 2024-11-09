@@ -3,9 +3,12 @@ table {
     white-space: nowrap;
 }
 
-thead,
+thead {
+	border-bottom: 2px solid black;
+	display: table-header-group;
+}
 tbody {
-    border-bottom: 2px solid black;
+    display: table-row-group;
 }
 
 th:first-child,
