@@ -26,6 +26,7 @@ template.innerHTML = `
         `;
 class Taskbox extends HTMLElement {
 
+    #newcallback;
     constructor() {
         super();
 
@@ -43,14 +44,19 @@ class Taskbox extends HTMLElement {
         this.statusesList = ["WAITING", "ACTIVE", "DONE"];
 
         this.closeModalBtn.addEventListener('click', () => this.close());
-        
-        this.taskCallback = null;
+       
+      //  this.taskCallback = null;
     }
 
 
     show() {
 
         this.dialog.showModal();
+
+    }
+    close() {
+
+        this.dialog.close();
 
     }
 
@@ -70,30 +76,32 @@ class Taskbox extends HTMLElement {
 
 
     }
+    
 
     newtaskCallback(callback) {
         
-        this.taskCallback = callback;
+       this.#newcallback = callback;
+       //this.taskCallback = callback;
+       if (this.addTaskBtn) {
+           this.addTaskBtn.addEventListener('click', () => {
+            const taskTitle = this.taskTitleInput.value;
+            const taskStatus = this.taskStatusSelect.value;
 
-        this.addTaskBtn.addEventListener('click', () => {
-     
-            const tasktitle = this.taskTitleInput.value;
-            const taskstatus = this.taskStatusSelect.value;
+               const newTask = { title: taskTitle, status: taskStatus};
+               if (this.#newcallback) {
+                   this.#newcallback(newTask); // Kall den registrerte callbacken
+               } else {
+                   console.warn('No new task callback is registered.');
+               }
 
-            const newTask = { title:tasktitle, status: taskstatus };
-            
-            if (this.taskCallback) {
-                            this.taskCallback(newTask);
-            }
-            this.close();;
-        });
-    }
-
-    close() {
-
-        this.dialog.close();
+               this.close(); // Lukk taskbox
+           });
 
     }
+    }
+    
+   
+
 }
 
 customElements.define('task-box', Taskbox);

@@ -44,50 +44,52 @@ class TaskView extends HTMLElement {
                 this.messageElement.textContent = "Loading tasks...";
                 
                 const statuses = await this.#fetchAllStatuses();
-                if(statuses === null){
+                if(statuses){
                     this.taskBox.setStatusesList(statuses);
                     this.taskList.setStatuseslist(statuses);
-                    console.log("Fetched statuses:", statuses);
-
                     console.log(this.newTaskButton);
+                    this.newTaskButton.disabled = false;
                 }
 
                 const tasks = await this.#fetchAllTasks();
                 if(tasks){
                     tasks.forEach(task => this.taskList.showTask(task));
-                    this.messageElement.textContent = `Found ${tasks.length} tasks`;
-                    } else {
-                    this.messageElement.textContent = `No tasks were found`;      
-                 }
-                    this.newTaskButton.disabled = false; 
+                    this.#updateMessage();
+                    } 
+                    
+                    
 
                     
+           //         this.taskbox.newtaskCallback(this.#createTask.bind(this));
                 this.taskBox.newtaskCallback(async (newTask) => {
                     const addedTask = await this.#createTask(newTask.title, newTask.status);
                     if(addedTask){
                         this.taskList.showTask(addedTask);
                         this.#updateMessage();
                     }
-                });
+                }); 
+                  
+          //        this.taskList.changestatusCallback(this.#updateStatus.bind(this));
 
                 this.taskList.changestatusCallback(async (id, newStatus) => {
                     const updatedTask = await this.#updateStatus(id, newStatus);
                     if(updatedTask){
                         this.taskList.updateTask(updatedTask);
                     }
-                });
+                }); 
 
-                this.taskList.deletetaskCallback(async id => {
+     //             this.taskList.deletetaskCallback(this.#deleteTask.bind(this));
+               this.taskList.deletetaskCallback(async taskId => {
             
-                    const deletedTask = await this.#deleteTask(id);
+                    const deletedTask = await this.#deleteTask(taskId);
                      if(deletedTask){
                             this.taskList.removeTask(id);
-                            console.log(`Oppgaven med ID ${id} ble slettet`);
-                            this.#updateMessage(); 
+                            this.updateMessage(); 
+                            console.log(`Oppgaven med ID ${taskId} ble slettet`);
                         } else {
-                            console.error(`Oppgaven med ID ${id} ble ikke slettet fra serveren.`);
+                            console.error(`Oppgaven med ID ${taskId} ble ikke slettet fra serveren.`);
                         }
-                    });
+                    }); 
                     
             
                 this.newTaskButton.addEventListener('click', () => {
@@ -105,10 +107,10 @@ class TaskView extends HTMLElement {
                     
                     if(data.responseStatus){
                         return data.allstatuses;
+                        
                   }
                   } catch(error){
                         console.error("Feil ved henting av statuser", error);
-                        return [];
                 }
                     
             }
