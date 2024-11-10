@@ -169,8 +169,8 @@ class TaskList extends HTMLElement {
 
 
         // Add status options to the select element
-        /*     const select = tr.querySelector('select');
-                    for (const status of this.statusesList) {
+            const select = tr.querySelector('select');
+                    for (const status of this.statuses) {
                         const option = document.createElement('option');
                         option.textContent = status;
                         option.value = status;
@@ -178,7 +178,7 @@ class TaskList extends HTMLElement {
                             option.selected = true; // Sett den nåværende statusen som valgt
                         }
                         select.appendChild(option); // Legg til statusalternativ i `SELECT`
-                    } */
+                    } 
 
         //  this.tbody.appendChild(tr);
 
@@ -234,7 +234,7 @@ class TaskList extends HTMLElement {
         const tr = this.shadow.querySelector(`[data-id="${id}"]`);
         if (tr) {
             tr.remove();
-            console.log('Task removed successfully');
+            console.log(`Task with ID ${id} removed successfully`);
         } else {
             console.warn(`Task with ID ${id} could not be found`);
         }
