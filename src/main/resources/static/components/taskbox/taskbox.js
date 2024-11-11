@@ -25,22 +25,23 @@ template.innerHTML = `
         </dialog>
         `;
 class Taskbox extends HTMLElement {
+    #shadow;
 
     #newcallback;
     constructor() {
         super();
 
-        this.shadow = this.attachShadow({ mode: 'closed' });
+        this.#shadow = this.attachShadow({ mode: 'closed' });
        
         
-        this.shadow.appendChild(template.content.cloneNode(true));
-        console.log(this.shadow.innerHTML);
+        this.#shadow.appendChild(template.content.cloneNode(true));
+        //console.log(this.#shadow.innerHTML);
 
-        this.dialog = this.shadow.querySelector('dialog');
-        this.closeModalBtn = this.shadow.querySelector('.close-btn');
-        this.addTaskBtn = this.shadow.querySelector('.add-task-btn');
-        this.taskTitleInput = this.shadow.querySelector('.task-title');
-        this.taskStatusSelect = this.shadow.querySelector('.task-status');
+        this.dialog = this.#shadow.querySelector('dialog');
+        this.closeModalBtn = this.#shadow.querySelector('.close-btn');
+        this.addTaskBtn = this.#shadow.querySelector('.add-task-btn');
+        this.taskTitleInput = this.#shadow.querySelector('.task-title');
+        this.taskStatusSelect = this.#shadow.querySelector('.task-status');
         this.statusesList = ["WAITING", "ACTIVE", "DONE"];
 
         this.closeModalBtn.addEventListener('click', () => this.close());

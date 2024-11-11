@@ -29,27 +29,28 @@ taskrow.innerHTML = `
   * Manage view with list of tasks
   */
 class TaskList extends HTMLElement {
-
+    #shadow;
     #changecallback;
     #deletecallback;
     constructor() {
         super();
 
-        this.shadow = this.attachShadow({ mode: 'closed' });
-        this.shadow.appendChild(template.content.cloneNode(true));
+        this.#shadow = this.attachShadow({ mode: 'closed' });
+        this.#shadow.appendChild(template.content.cloneNode(true));
 
-        this.taskListElement = this.shadow.querySelector('#tasklist');
+        this.taskListElement = this.#shadow.querySelector('#tasklist');
         this.taskListElement.appendChild(tasktable.content.cloneNode(true));
 
-        this.tbody = this.shadow.querySelector('tbody');
+        this.tbody = this.#shadow.querySelector('tbody');
         this.tbody.appendChild(taskrow);
 
-        this.tasks = [];
+        //this.tasks = [];
         this.statuses = [];
 
 
-        this.shadow.addEventListener('change', (event) => {
-            if (event.target.tagName === 'SELECT') {
+
+   /*     this.#shadow.addEventListener('change', (event) => {
+            if (event.target.tagName === 'select') {
                 const selectElement = event.target;
                 const row = selectElement.closest('tr');
                 const taskId = row.getAttribute('data-id')  // Anta ID-en er i første kolonne
@@ -57,22 +58,22 @@ class TaskList extends HTMLElement {
 
                 // Bekreft og kjør statusendrings-callback hvis tilgjengelig
                 const confirmation = window.confirm(`Set '${taskId}' to ${newStatus}?`);
-                if (confirmation && this.changeCallback) {
-                    this.changeCallback(taskId, newStatus);
+                if (confirmation && this.#changecallback) {
+                    this.#changecallback(taskId, newStatus);
                 }
             }
-        });
+        }); */
 
 
-        this.shadow.addEventListener('click', (event) => {
+        this.#shadow.addEventListener('click', (event) => {
             if (event.target.tagName === 'BUTTON' && event.target.textContent === 'Remove') {
                 const row = event.target.closest('tr');
                 const taskId = row.getAttribute('data-id')  // Anta ID-en er i første kolonne
 
                 // Bekreft og kjør slettings-callback hvis tilgjengelig
                 const confirmation = window.confirm(`Are you sure you want to delete task ${taskId}?`);
-                if (confirmation && this.deleteCallback) {
-                    this.deleteCallback(taskId);
+                if (confirmation && this.#deletecallback) {
+                    this.#deletecallback(taskId);
                 }
             }
         });
@@ -90,7 +91,7 @@ class TaskList extends HTMLElement {
         this.statuses = allstatuses;
 
         //Finner alle <select> elementer i tabellen
-        const selectElements = this.shadow.querySelectorAll('select');
+        const selectElements = this.#shadow.querySelectorAll('select');
 
         //Oppdaterer hvert <select> element med de nye statusene
         selectElements.forEach(select => {
@@ -152,38 +153,41 @@ class TaskList extends HTMLElement {
 
         tr.setAttribute('data-id', task.id);
 
-        tr.querySelectorAll('td')[0].textContent = task.title;
-        tr.querySelectorAll('td')[1].textContent = task.status;
+        tr.cells[0].textContent = task.title;
+        tr.cells[1].textContent = task.status;
 
 
-        if (this.tbody) {
+        if (this.tbody !== null) {
             this.tbody.appendChild(tr);
         } else {
             console.error("tbody element is not defined");
         }
 
-        const removeButton = tr.querySelector('button');
-        removeButton.addEventListener('click', () => {
-            this.removeTask(task.id);
-        });
-
-
         // Add status options to the select element
-            const select = tr.querySelector('select');
-                    for (const status of this.statuses) {
-                        const option = document.createElement('option');
-                        option.textContent = status;
-                        option.value = status;
-                        if (status === task.status) {
-                            option.selected = true; // Sett den nåværende statusen som valgt
-                        }
-                        select.appendChild(option); // Legg til statusalternativ i `SELECT`
-                    } 
+        const select = tr.querySelector('select');
+        for (const status of this.statuses) {
+            const option = document.createElement('option');
+            option.textContent = status;
+            option.value = status;
+            if (status === task.status) {
+                option.selected = true; // Sett den nåværende statusen som valgt
+            }
+            select.appendChild(option); // Legg til statusalternativ i `SELECT`
+        }
+        select.addEventListener('change', () => {
+            const newStatus = select.value;
+            const confirmation = window.confirm(`Set '${task.title}' to ${newStatus}?`);
+            if (confirmation && this.#changecallback) {
+                this.#changecallback(task.id, newStatus); // Kall den registrerte callbacken
+            }
+            const statusCell = tr.querySelectorAll('td')[1]; // Forutsetter at status er i den andre cellen
+                       if (statusCell) {
+                           statusCell.textContent = newStatus; // Oppdater visningen av statusen i cellen
+                       }
 
-        //  this.tbody.appendChild(tr);
-
-        // Prepend to add the new task at the top
-        //      this.taskListElement.insertBefore(clone, this.taskListElement.firstChild); 
+                       // Oppdater `select`-elementet for å vise den nye statusen som valgt
+                       select.value = newStatus;
+        });
     }
 
     /**
@@ -196,47 +200,44 @@ class TaskList extends HTMLElement {
         const newStatus = task.status;
 
         //Finn indeks til oppgaven i tabellen
-        const taskIndex = this.tasks.findIndex(t => t.id === taskId);
+        //  const taskIndex = this.tasks.findIndex(t => t.id === taskId);
 
         //Oppdater status dersom oppgaven ble funnet
-        if (taskIndex !== -1) {
+        // if (taskIndex !== -1) {
 
-            //oppdater status i tasks-tabell
-            this.tasks[taskIndex].status = newStatus;
+        //oppdater status i tasks-tabell
+        // this.tasks[taskIndex].status = newStatus;
 
-            // Finn raden som tilsvarer denne oppgaven i tabellen
-            const taskTableBody = this.shadow.querySelector('tbody');
-            const taskRow = taskTableBody.children[taskIndex];
+        // Finn raden som tilsvarer denne oppgaven i tabellen
+        const taskTableBody = this.#shadow.querySelector('tbody');
+        const taskRow = taskTableBody.querySelector(`tr[data-id="${taskId}"]`);
 
-
-            // Oppdaterer tekstinnholdet for status
-            const statusCell = taskRow.querySelector('td:nth-child(2)');
-            statusCell.textContent = newStatus;
-
-            // Finn <select> elementet i raden
-            const selectElement = taskRow.querySelector('select');
-
-            // Oppdater <select> elementet til den nye statusen
-            selectElement.value = newStatus;
+        // Oppdaterer tekstinnholdet for status
+        const statusCell = taskRow.cells[2];
+        statusCell.textContent = newStatus;
 
 
-        } else {
-            console.error(`Oppgave med ID ${taskId} ble ikke funnet.`);
-        }
+        // Finn <select> elementet i raden
+        const selectElement = taskRow.querySelector('select');
+        console.log(taskRow.innerHTML)
+
+        // Oppdater <select> elementet til den nye statusen
+        selectElement.value = newStatus;
+
     }
 
     /**
      * Remove a task from the view
      * @param {Integer} task - ID of task to remove
      */
-    removeTask(id) {
+    removeTask(taskId) {
 
-        const tr = this.shadow.querySelector(`[data-id="${id}"]`);
-        if (tr) {
+        const tr = this.#shadow.querySelector(`[data-id="${taskId}"]`);
+        if (tr !== null) {
             tr.remove();
-            console.log(`Task with ID ${id} removed successfully`);
+            console.log(`Task with ID ${taskId} removed successfully`);
         } else {
-            console.warn(`Task with ID ${id} could not be found`);
+            console.warn(`Task with ID ${taskId} could not be found`);
         }
     }
 
@@ -245,7 +246,7 @@ class TaskList extends HTMLElement {
      * @return {Number} - Number of tasks on display in view
      */
     getNumtasks() {
-        //    const numTasks = this.shadow.querySelectorAll('taskrow[data-id]').length;        
+        //    const numTasks = this.#shadow.querySelectorAll('taskrow[data-id]').length;        
         const numTasks = this.tbody ? this.tbody.rows.length : 0;
         console.log('Number of tasks:', numTasks); // Debug-melding
         return numTasks;
