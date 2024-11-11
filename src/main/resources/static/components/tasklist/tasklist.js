@@ -177,7 +177,12 @@ class TaskList extends HTMLElement {
         select.addEventListener('change', () => {
             const newStatus = select.value;
             const confirmation = window.confirm(`Set '${task.title}' to ${newStatus}?`);
-            if (confirmation && this.#changecallback) {
+            if (!confirmation) {
+                   // Hvis brukeren avbryter, tilbakestill `select`-verdien til den gamle statusen
+                   select.value = task.status; // Setter `select` tilbake til opprinnelig status
+                   return; // Avbryt videre behandling
+               }
+            if (this.#changecallback) {
                 this.#changecallback(task.id, newStatus); // Kall den registrerte callbacken
             }
             const statusCell = tr.querySelectorAll('td')[1]; // Forutsetter at status er i den andre cellen
@@ -213,13 +218,13 @@ class TaskList extends HTMLElement {
         const taskRow = taskTableBody.querySelector(`tr[data-id="${taskId}"]`);
 
         // Oppdaterer tekstinnholdet for status
-        const statusCell = taskRow.cells[2];
+        const statusCell = taskRow.cells[1];
         statusCell.textContent = newStatus;
 
 
         // Finn <select> elementet i raden
         const selectElement = taskRow.querySelector('select');
-        console.log(taskRow.innerHTML)
+        //console.log(taskRow.innerHTML)
 
         // Oppdater <select> elementet til den nye statusen
         selectElement.value = newStatus;
