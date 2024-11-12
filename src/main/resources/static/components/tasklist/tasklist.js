@@ -44,24 +44,21 @@ class TaskList extends HTMLElement {
         this.tbody = this.#shadow.querySelector('tbody');
         this.tbody.appendChild(taskrow);
 
-        //this.tasks = [];
-        this.statuses = [];
 
+        this.#shadow.addEventListener('change', (event) => {
+            if (event.target.tagName === 'SELECT') {
+                const selectElement = event.target;
+                const row = selectElement.closest('tr');
+                const taskId = row.getAttribute('data-id')  // Anta ID-en er i første kolonne
+                const newStatus = selectElement.value;
 
-           this.#shadow.addEventListener('change', (event) => {
-                if (event.target.tagName === 'SELECT') {
-                    const selectElement = event.target;
-                    const row = selectElement.closest('tr');
-                    const taskId = row.getAttribute('data-id')  // Anta ID-en er i første kolonne
-                    const newStatus = selectElement.value;
-    
-                    // Bekreft og kjør statusendrings-callback hvis tilgjengelig
-                    const confirmation = window.confirm(`Set '${taskId}' to ${newStatus}?`);
-                    if (confirmation && this.#changecallback) {
-                        this.#changecallback(taskId, newStatus);
-                    }
+                // Bekreft og kjør statusendrings-callback hvis tilgjengelig
+                const confirmation = window.confirm(`Set '${taskId}' to ${newStatus}?`);
+                if (confirmation && this.#changecallback) {
+                    this.#changecallback(taskId, newStatus);
                 }
-            }); 
+            }
+        });
 
 
         this.#shadow.addEventListener('click', (event) => {
@@ -156,8 +153,8 @@ class TaskList extends HTMLElement {
         tr.cells[1].textContent = task.status;
 
         if (this.tbody && this.tbody.firstChild) {
-              this.tbody.insertBefore(tr, this.tbody.firstChild); // Legger til oppgaven øverst
-          }
+            this.tbody.insertBefore(tr, this.tbody.firstChild); // Legger til oppgaven øverst
+        }
 
 
         const select = tr.querySelector('select');
@@ -209,13 +206,22 @@ class TaskList extends HTMLElement {
      */
     removeTask(taskId) {
 
-        const tr = this.#shadow.querySelector(`[data-id="${taskId}"]`);
-        if (tr !== null) {
-            tr.remove();
-            console.log(`Task with ID ${taskId} removed successfully`);
-        } else {
-            console.warn(`Task with ID ${taskId} could not be found`);
+        const rows = this.tbody.rows;
+        for (let i = 0; i < rows.length; i++) {
+            if (rows[i].getAttribute('data-id') === String(taskId)) {
+                rows[i].remove();
+                console.log(`Task with ID ${taskId} removed successfully`);
+                return;
+            }
         }
+
+        /*  const tr = this.#shadow.querySelector(`[data-id="${taskId}"]`);
+          if (tr !== null) {
+              tr.remove();
+              console.log(`Task with ID ${taskId} removed successfully`);
+          } else {
+              console.warn(`Task with ID ${taskId} could not be found`);
+          } */
     }
 
     /**

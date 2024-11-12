@@ -25,17 +25,17 @@ template.innerHTML = `
         </dialog>
         `;
 class Taskbox extends HTMLElement {
-    
+
     #shadow;
     #newcallback;
     constructor() {
         super();
 
         this.#shadow = this.attachShadow({ mode: 'closed' });
-       
-        
+
+
         this.#shadow.appendChild(template.content.cloneNode(true));
-        //console.log(this.#shadow.innerHTML);
+
 
         this.dialog = this.#shadow.querySelector('dialog');
         this.closeModalBtn = this.#shadow.querySelector('.close-btn');
@@ -45,8 +45,7 @@ class Taskbox extends HTMLElement {
         this.statusesList = ["WAITING", "ACTIVE", "DONE"];
 
         this.closeModalBtn.addEventListener('click', () => this.close());
-       
-      //  this.taskCallback = null;
+
     }
 
 
@@ -61,11 +60,11 @@ class Taskbox extends HTMLElement {
 
     }
 
-    setStatusesList(statuslist) {
+    #setStatusesList(statuslist) {
 
-        this.taskStatusSelect.innerHTML= '';
-        
-        
+        this.taskStatusSelect.innerHTML = '';
+
+
         for (const status of statuslist) {
 
             const option = document.createElement('option');
@@ -77,15 +76,15 @@ class Taskbox extends HTMLElement {
 
 
     }
-    
+
 
     newtaskCallback(callback) {
-        
-       this.#newcallback = callback;
-    
+
+        this.#newcallback = callback;
+
     }
-    
-   
+
+
 
 }
 

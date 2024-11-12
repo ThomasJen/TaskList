@@ -58,7 +58,6 @@ class TaskView extends HTMLElement {
             this.#updateMessage();
         }
 
-        // this.taskbox.newtaskCallback(this.#createTask.bind(this));
         this.taskBox.newtaskCallback(async (newTask) => {
             const addedTask = await this.#createTask(newTask.title, newTask.status);
             if (addedTask) {
@@ -66,8 +65,6 @@ class TaskView extends HTMLElement {
                 this.#updateMessage();
             }
         });
-
-        // this.taskList.changestatusCallback(this.#updateStatus.bind(this));
 
         this.taskList.changestatusCallback(async (id, newStatus) => {
             const updatedTask = await this.#updateStatus(id, newStatus);
@@ -77,7 +74,6 @@ class TaskView extends HTMLElement {
             }
         });
 
-        // this.taskList.deletetaskCallback(this.#deleteTask.bind(this));
         this.taskList.deletetaskCallback(async taskId => {
             console.log(`deletetaskCallback called with task ID: ${taskId}`);
             const deletedTask = await this.#deleteTask(taskId);
