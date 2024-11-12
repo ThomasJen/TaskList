@@ -25,7 +25,12 @@ template.innerHTML = `
         </dialog>
         `;
 class Taskbox extends HTMLElement {
-
+    #statusesList;
+    #dialog;
+    #closeModalBtn;
+    #addTaskBtn;
+    #taskTitleInput;
+    #taskStatusSelect;
     #shadow;
     #newcallback;
     constructor() {
@@ -37,32 +42,32 @@ class Taskbox extends HTMLElement {
         this.#shadow.appendChild(template.content.cloneNode(true));
 
 
-        this.dialog = this.#shadow.querySelector('dialog');
-        this.closeModalBtn = this.#shadow.querySelector('.close-btn');
-        this.addTaskBtn = this.#shadow.querySelector('.add-task-btn');
-        this.taskTitleInput = this.#shadow.querySelector('.task-title');
-        this.taskStatusSelect = this.#shadow.querySelector('.task-status');
-        this.statusesList = ["WAITING", "ACTIVE", "DONE"];
+        this.#dialog = this.#shadow.querySelector('dialog');
+        this.#closeModalBtn = this.#shadow.querySelector('.close-btn');
+        this.#addTaskBtn = this.#shadow.querySelector('.add-task-btn');
+        this.#taskTitleInput = this.#shadow.querySelector('.task-title');
+        this.#taskStatusSelect = this.#shadow.querySelector('.task-status');
+        this.#statusesList = ["WAITING", "ACTIVE", "DONE"];
 
-        this.closeModalBtn.addEventListener('click', () => this.close());
+        this.#closeModalBtn.addEventListener('click', () => this.close());
 
     }
 
 
     show() {
 
-        this.dialog.showModal();
+        this.#dialog.showModal();
 
     }
     close() {
 
-        this.dialog.close();
+        this.#dialog.close();
 
     }
 
-    #setStatusesList(statuslist) {
+    setStatusesList(statuslist) {
 
-        this.taskStatusSelect.innerHTML = '';
+        this.#taskStatusSelect.innerText = '';
 
 
         for (const status of statuslist) {
@@ -70,20 +75,16 @@ class Taskbox extends HTMLElement {
             const option = document.createElement('option');
             option.value = status;
             option.textContent = status;
-            this.taskStatusSelect.appendChild(option);
+            this.#taskStatusSelect.appendChild(option);
 
         }
-
-
     }
-
 
     newtaskCallback(callback) {
 
         this.#newcallback = callback;
 
     }
-
 
 
 }
