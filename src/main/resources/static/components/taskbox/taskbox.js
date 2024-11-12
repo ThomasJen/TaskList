@@ -50,6 +50,21 @@ class Taskbox extends HTMLElement {
 
         this.#closeModalBtn.addEventListener('click', () => this.close());
     
+        
+        
+        this.#addTaskBtn.addEventListener('click', () => {
+         const taskTitle = this.#taskTitleInput.value;
+         const taskStatus = this.#taskStatusSelect.value;
+
+            const newTask = { title: taskTitle, status: taskStatus};
+            if (this.#newcallback) {
+                this.#newcallback(newTask); // Kall den registrerte callbacken
+            } else {
+                console.warn('No new task callback is registered.');
+            }
+
+            this.close(); // Lukk taskbox
+        }); 
     }
 
 
@@ -86,22 +101,7 @@ class Taskbox extends HTMLElement {
         
        this.#newcallback = callback;
   
-       if (this.#addTaskBtn) {
-           this.#addTaskBtn.addEventListener('click', () => {
-            const taskTitle = this.#taskTitleInput.value;
-            const taskStatus = this.#taskStatusSelect.value;
-
-               const newTask = { title: taskTitle, status: taskStatus};
-               if (this.#newcallback) {
-                   this.#newcallback(newTask); // Kall den registrerte callbacken
-               } else {
-                   console.warn('No new task callback is registered.');
-               }
-
-               this.close(); // Lukk taskbox
-           }); 
-
-    }
+  
     }
     
    
