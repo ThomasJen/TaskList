@@ -29,6 +29,8 @@ taskrow.innerHTML = `
   * Manage view with list of tasks
   */
 class TaskList extends HTMLElement {
+    #taskListElement;
+    #tbody;
     #shadow;
     #changecallback;
     #deletecallback;
@@ -38,11 +40,11 @@ class TaskList extends HTMLElement {
         this.#shadow = this.attachShadow({ mode: 'closed' });
         this.#shadow.appendChild(template.content.cloneNode(true));
 
-        this.taskListElement = this.#shadow.querySelector('#tasklist');
-        this.taskListElement.appendChild(tasktable.content.cloneNode(true));
+        this.#taskListElement = this.#shadow.querySelector('#tasklist');
+        this.#taskListElement.appendChild(tasktable.content.cloneNode(true));
 
-        this.tbody = this.#shadow.querySelector('tbody');
-        this.tbody.appendChild(taskrow);
+        this.#tbody = this.#shadow.querySelector('tbody');
+        this.#tbody.appendChild(taskrow);
 
 
         this.#shadow.addEventListener('change', (event) => {
@@ -152,8 +154,8 @@ class TaskList extends HTMLElement {
         tr.cells[0].textContent = task.title;
         tr.cells[1].textContent = task.status;
 
-        if (this.tbody && this.tbody.firstChild) {
-            this.tbody.insertBefore(tr, this.tbody.firstChild); // Legger til oppgaven øverst
+        if (this.#tbody && this.#tbody.firstChild) {
+            this.#tbody.insertBefore(tr, this.#tbody.firstChild); // Legger til oppgaven øverst
         }
 
 
@@ -206,7 +208,7 @@ class TaskList extends HTMLElement {
      */
     removeTask(taskId) {
 
-        const rows = this.tbody.rows;
+        const rows = this.#tbody.rows;
         for (let i = 0; i < rows.length; i++) {
             if (rows[i].getAttribute('data-id') === String(taskId)) {
                 rows[i].remove();
@@ -230,7 +232,7 @@ class TaskList extends HTMLElement {
      */
     getNumtasks() {
         //    const numTasks = this.#shadow.querySelectorAll('taskrow[data-id]').length;        
-        const numTasks = this.tbody ? this.tbody.rows.length : 0;
+        const numTasks = this.#tbody ? this.#tbody.rows.length : 0;
         console.log('Number of tasks:', numTasks); // Debug-melding
         return numTasks;
 

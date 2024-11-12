@@ -23,6 +23,8 @@ template.innerHTML = `
  `;
 
 class TaskView extends HTMLElement {
+   #messageElement;
+   #newTaskButton;
     #shadow;
     constructor() {
         super();
@@ -32,8 +34,8 @@ class TaskView extends HTMLElement {
 
         this.taskList = this.#shadow.querySelector('task-list');
         this.taskBox = this.#shadow.querySelector('task-box');
-        this.messageElement = this.#shadow.querySelector('#message');
-        this.newTaskButton = this.#shadow.querySelector('button');
+        this.#messageElement = this.#shadow.querySelector('#message');
+        this.#newTaskButton = this.#shadow.querySelector('button');
 
         this.serviceUrl = this.getAttribute('data-serviceurl');
 
@@ -42,14 +44,14 @@ class TaskView extends HTMLElement {
     }
 
     async initialize() {
-        this.messageElement.textContent = "Loading tasks...";
+        this.#messageElement.textContent = "Loading tasks...";
 
         const statuses = await this.#fetchAllStatuses();
         if (statuses) {
             this.taskBox.setStatusesList(statuses);
             this.taskList.setStatuseslist(statuses);
-            console.log(this.newTaskButton);
-            this.newTaskButton.disabled = false;
+            console.log(this.#newTaskButton);
+            this.#newTaskButton.disabled = false;
         }
 
         const tasks = await this.#fetchAllTasks();
@@ -87,7 +89,7 @@ class TaskView extends HTMLElement {
         });
 
 
-        this.newTaskButton.addEventListener('click', () => {
+        this.#newTaskButton.addEventListener('click', () => {
             console.log("New task button is clicked:");
             this.taskBox.show();
         });
@@ -183,9 +185,9 @@ class TaskView extends HTMLElement {
     #updateMessage() {
         const numTasks = this.taskList.getNumtasks();
         if (numTasks === 0) {
-            this.messageElement.textContent = "No tasks were found";
+            this.#messageElement.textContent = "No tasks were found";
         } else {
-            this.messageElement.textContent = `Found ${numTasks} tasks`;
+            this.#messageElement.textContent = `Found ${numTasks} tasks`;
         }
     }
 }
