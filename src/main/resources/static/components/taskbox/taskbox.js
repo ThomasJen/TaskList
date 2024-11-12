@@ -94,16 +94,13 @@ class Taskbox extends HTMLElement {
         }
 
     }
-    
-
+   
     newtaskCallback(callback) {
         
        this.#newcallback = callback;
   
   
     }
-    
-   
 
 }
 

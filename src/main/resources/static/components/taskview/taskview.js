@@ -24,8 +24,9 @@ template.innerHTML = `
 
 class TaskView extends HTMLElement {
    #messageElement;
+   #serviceUrl;
    #newTaskButton;
-    #shadow;
+   #shadow;
     constructor() {
         super();
 
@@ -37,7 +38,7 @@ class TaskView extends HTMLElement {
         this.#messageElement = this.#shadow.querySelector('#message');
         this.#newTaskButton = this.#shadow.querySelector('button');
 
-        this.serviceUrl = this.getAttribute('data-serviceurl');
+        this.#serviceUrl = this.getAttribute('data-serviceurl');
 
         this.initialize()
 
