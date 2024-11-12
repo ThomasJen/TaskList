@@ -25,22 +25,21 @@ template.innerHTML = `
         </dialog>
         `;
 class Taskbox extends HTMLElement {
-    #statusesList;
     #dialog;
     #closeModalBtn;
     #addTaskBtn;
     #taskTitleInput;
     #taskStatusSelect;
+    #statusesList;
     #shadow;
     #newcallback;
     constructor() {
         super();
 
         this.#shadow = this.attachShadow({ mode: 'closed' });
-
-
+       
+        
         this.#shadow.appendChild(template.content.cloneNode(true));
-
 
         this.#dialog = this.#shadow.querySelector('dialog');
         this.#closeModalBtn = this.#shadow.querySelector('.close-btn');
@@ -50,7 +49,7 @@ class Taskbox extends HTMLElement {
         this.#statusesList = ["WAITING", "ACTIVE", "DONE"];
 
         this.#closeModalBtn.addEventListener('click', () => this.close());
-
+    
     }
 
 
@@ -67,9 +66,9 @@ class Taskbox extends HTMLElement {
 
     setStatusesList(statuslist) {
 
-        this.#taskStatusSelect.innerText = '';
-
-
+        this.#taskStatusSelect.innerHTML= '';
+        
+        
         for (const status of statuslist) {
 
             const option = document.createElement('option');
@@ -78,14 +77,34 @@ class Taskbox extends HTMLElement {
             this.#taskStatusSelect.appendChild(option);
 
         }
+
+
     }
+    
 
     newtaskCallback(callback) {
+        
+       this.#newcallback = callback;
+  
+       if (this.#addTaskBtn) {
+           this.#addTaskBtn.addEventListener('click', () => {
+            const taskTitle = this.#taskTitleInput.value;
+            const taskStatus = this.#taskStatusSelect.value;
 
-        this.#newcallback = callback;
+               const newTask = { title: taskTitle, status: taskStatus};
+               if (this.#newcallback) {
+                   this.#newcallback(newTask); // Kall den registrerte callbacken
+               } else {
+                   console.warn('No new task callback is registered.');
+               }
+
+               this.close(); // Lukk taskbox
+           }); 
 
     }
-
+    }
+    
+   
 
 }
 
