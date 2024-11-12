@@ -95,7 +95,7 @@ class TaskList extends HTMLElement {
         selectElements.forEach(select => {
 
             //Fjerner eksisterende alternativer
-            select.innerHTML = '';
+            select.innerText = '';
 
             //Legger til standard <Modify>-valg
             const modifyOption = document.createElement('option');

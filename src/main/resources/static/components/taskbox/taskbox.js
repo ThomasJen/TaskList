@@ -81,7 +81,7 @@ class Taskbox extends HTMLElement {
 
     setStatusesList(statuslist) {
 
-        this.#taskStatusSelect.innerHTML= '';
+        this.#taskStatusSelect.innerText= '';
         
         
         for (const status of statuslist) {
@@ -92,7 +92,6 @@ class Taskbox extends HTMLElement {
             this.#taskStatusSelect.appendChild(option);
 
         }
-
 
     }
     
