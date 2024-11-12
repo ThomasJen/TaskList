@@ -140,7 +140,7 @@ class TaskList extends HTMLElement {
      * @param {Object} task - Object representing a task
      */
     showTask(task) {
-
+       
         if (!taskrow || !taskrow.content) {
             console.error("Table body (tbody) not found in task list element");
             return;
@@ -208,22 +208,11 @@ class TaskList extends HTMLElement {
      */
     removeTask(taskId) {
 
-        const rows = this.#tbody.rows;
-        for (let i = 0; i < rows.length; i++) {
-            if (rows[i].getAttribute('data-id') === String(taskId)) {
-                rows[i].remove();
-                console.log(`Task with ID ${taskId} removed successfully`);
-                return;
-            }
-        }
-
-        /*  const tr = this.#shadow.querySelector(`[data-id="${taskId}"]`);
-          if (tr !== null) {
-              tr.remove();
-              console.log(`Task with ID ${taskId} removed successfully`);
-          } else {
-              console.warn(`Task with ID ${taskId} could not be found`);
-          } */
+        const rows = this.#tbody.querySelector(`tr[data-id="${taskId}"]`);
+        if(rows !== null) {
+            rows.remove();
+            console.log(`Task with ID ${taskId} removed successfully`);
+        }    
     }
 
     /**
