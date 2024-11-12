@@ -100,7 +100,7 @@ class TaskView extends HTMLElement {
     async #fetchAllStatuses() {
 
         try {
-            const response = await fetch(`${this.serviceUrl}/allstatuses`);
+            const response = await fetch(`${this.#serviceUrl}/allstatuses`);
             const data = await response.json();
 
             if (data.responseStatus) {
@@ -116,7 +116,7 @@ class TaskView extends HTMLElement {
     async #fetchAllTasks() {
 
         try {
-            const response = await fetch(`${this.serviceUrl}/tasklist`);
+            const response = await fetch(`${this.#serviceUrl}/tasklist`);
             const data = await response.json();
             if (data.responseStatus) {
                 return data.tasks;
@@ -130,7 +130,7 @@ class TaskView extends HTMLElement {
 
     async #createTask(title, status) {
         try {
-            const response = await fetch(`${this.serviceUrl}/task`, {
+            const response = await fetch(`${this.#serviceUrl}/task`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, status })
@@ -150,7 +150,7 @@ class TaskView extends HTMLElement {
         console.log(newStatus);
         try {
             
-            const response = await fetch(`${this.serviceUrl}/task/${id}`, {
+            const response = await fetch(`${this.#serviceUrl}/task/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })
@@ -168,7 +168,7 @@ class TaskView extends HTMLElement {
     async #deleteTask(id) {
 
         try {
-            const response = await fetch(`${this.serviceUrl}/task/${id}`, {
+            const response = await fetch(`${this.#serviceUrl}/task/${id}`, {
                 method: 'DELETE'
             });
 
