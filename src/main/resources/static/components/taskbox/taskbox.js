@@ -25,8 +25,8 @@ template.innerHTML = `
         </dialog>
         `;
 class Taskbox extends HTMLElement {
+    
     #shadow;
-
     #newcallback;
     constructor() {
         super();
@@ -82,23 +82,7 @@ class Taskbox extends HTMLElement {
     newtaskCallback(callback) {
         
        this.#newcallback = callback;
-       //this.taskCallback = callback;
-       if (this.addTaskBtn) {
-           this.addTaskBtn.addEventListener('click', () => {
-            const taskTitle = this.taskTitleInput.value;
-            const taskStatus = this.taskStatusSelect.value;
-
-               const newTask = { title: taskTitle, status: taskStatus};
-               if (this.#newcallback) {
-                   this.#newcallback(newTask); // Kall den registrerte callbacken
-               } else {
-                   console.warn('No new task callback is registered.');
-               }
-
-               this.close(); // Lukk taskbox
-           });
-
-    }
+    
     }
     
    
